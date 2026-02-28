@@ -396,7 +396,7 @@ Built something with this? Open a PR — new framework examples, language ports,
 
 ## Resources
 
-- [Commune documentation](https://commune.email/docs)
+- [Commune documentation](https://commune.email/docs?ref=email-for-agents)
 - [Sign up for Commune](https://commune.email)
 - [PyPI: commune-mail](https://pypi.org/project/commune-mail/)
 - [npm: commune-ai](https://www.npmjs.com/package/commune-ai)
