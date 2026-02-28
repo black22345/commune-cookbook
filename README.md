@@ -4,7 +4,21 @@
 [![LangChain](https://img.shields.io/badge/LangChain-compatible-green)](langchain/)
 [![CrewAI](https://img.shields.io/badge/CrewAI-compatible-orange)](crewai/)
 [![MCP](https://img.shields.io/badge/MCP-server-purple)](mcp-server/)
-[![CI](https://github.com/shanjairaj7/email-for-agents/actions/workflows/ci.yml/badge.svg)](https://github.com/shanjairaj7/email-for-agents/actions/workflows/ci.yml)
+[![CI](https://github.com/shanjai-raj/email-for-agents/actions/workflows/ci.yml/badge.svg)](https://github.com/shanjai-raj/email-for-agents/actions/workflows/ci.yml)
+
+## Interactive Notebooks
+
+Run these notebooks directly in your browser — no setup required:
+
+| Notebook | Framework | Open |
+|----------|-----------|------|
+| Customer Support Agent | LangChain | [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/shanjai-raj/commune-cookbook/blob/main/notebooks/langchain_customer_support.ipynb) |
+| Multi-Agent Email Crew | CrewAI | [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/shanjai-raj/commune-cookbook/blob/main/notebooks/crewai_multi_agent_crew.ipynb) |
+| Email Agent with OpenAI | OpenAI Agents SDK | [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/shanjai-raj/commune-cookbook/blob/main/notebooks/openai_agents_email.ipynb) |
+| Structured Email Extraction | Any framework | [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/shanjai-raj/commune-cookbook/blob/main/notebooks/structured_extraction.ipynb) |
+| 5-Minute Quickstart | Python | [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/shanjai-raj/commune-cookbook/blob/main/notebooks/quickstart.ipynb) |
+
+---
 
 # Email & SMS for AI Agents
 
