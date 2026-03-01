@@ -63,14 +63,16 @@ TENANTS: dict[str, dict] = {
     },
 }
 
-# BUG-ARCH-1: The processed_events set is an in-process Python set. In a
-# production deployment with multiple FastAPI worker processes (e.g. uvicorn
-# --workers 4, or a Kubernetes deployment with N replicas), each worker
-# maintains its own set. An event delivered to Worker-1 is marked processed
-# there, but Worker-2 has no record of it — a retry to Worker-2 is processed
-# again, sending the customer a duplicate reply.
-# Fix: Use a shared external store (Redis SETNX with TTL, Postgres upsert).
-processed_events: set[str] = set()
+import redis as _redis
+
+_redis_conn = _redis.from_url(os.environ.get("REDIS_URL", "redis://localhost:6379/0"))
+_IDEMPOTENCY_TTL = 86400  # 24 hours
+
+
+def _is_duplicate_event(event_id: str) -> bool:
+    """Atomically claim event_id across all workers and replicas via Redis SETNX."""
+    key = f"commune:processed:{event_id}"
+    return not _redis_conn.set(key, "1", nx=True, ex=_IDEMPOTENCY_TTL)
 
 
 def get_tenant(inbox_id: str) -> Optional[dict]:
@@ -82,15 +84,14 @@ def get_thread_context(thread_id: str, inbox_id: str) -> str:
     """
     Fetch recent messages from the thread for LLM context.
 
-    BUG-CORRECT-2: threads.messages() is called without scoping to inbox_id.
-    If thread_id belongs to a different tenant's inbox (e.g. attacker crafts
-    a webhook with a spoofed thread_id), this returns messages from that
-    foreign thread — leaking another tenant's customer emails to this tenant's
-    LLM. The inbox_id check inside threads.messages() prevents cross-tenant
-    thread reads.
+    Scoped to inbox_id so cross-tenant thread reads are rejected by the API
+    (returns 404 if thread_id doesn't belong to inbox_id).
     """
-    # Missing: verify that thread_id belongs to inbox_id before fetching
-    messages = commune.threads.messages(thread_id=thread_id, order="asc")
+    messages = commune.threads.messages(
+        thread_id=thread_id,
+        inbox_id=inbox_id,   # scope to this tenant's inbox
+        order="asc",
+    )
     if not messages:
         return ""
     parts = []
@@ -155,11 +156,9 @@ async def handle_webhook(
     payload = json.loads(raw_body)
     event_id = payload.get("event_id", "")
 
-    # Idempotency check (in-process only — see BUG-ARCH-1)
-    if event_id in processed_events:
+    if _is_duplicate_event(event_id):
         logger.info(f"Duplicate event {event_id} — skipping")
         return {"status": "duplicate"}
-    processed_events.add(event_id)
 
     if payload.get("event") != "message.received":
         return {"status": "ignored"}
@@ -186,10 +185,8 @@ async def handle_webhook(
         f"(thread={thread_id})"
     )
 
-    # Load thread history (see BUG-CORRECT-2)
     thread_context = get_thread_context(thread_id, inbox_id)
 
-    # Generate reply
     reply_text = generate_reply(
         persona=tenant["persona"],
         thread_context=thread_context,
@@ -197,16 +194,12 @@ async def handle_webhook(
         subject=subject,
     )
 
-    # BUG-CORRECT-1: Reply is sent to the correct tenant inbox_id but
-    # the thread_id is not passed. Every reply creates a new disconnected
-    # email thread. Customer sees a fresh email with no history instead of
-    # a continued conversation. Agents lose conversation context on follow-up.
     commune.messages.send(
         to=sender,
         subject=f"Re: {subject}" if not subject.startswith("Re:") else subject,
         text=reply_text,
         inbox_id=tenant["inbox_id"],
-        # thread_id=thread_id  ← missing!
+        thread_id=thread_id,   # continues the customer's existing thread
     )
 
     logger.info(f"Reply sent to {sender} for tenant '{tenant['name']}'")
