@@ -32,13 +32,9 @@ logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 
-# BUG-SEC-1: Webhook secret is hardcoded as a string literal.
-# Anyone with access to this source file (or git history) can forge
-# webhooks. Secrets must come from environment variables.
-WEBHOOK_SECRET = "whsec_dev_localtest_abc123xyz"
-
-COMMUNE_API_KEY = os.environ.get("COMMUNE_API_KEY", "")
-INBOX_ID = os.environ.get("COMMUNE_INBOX_ID", "")
+WEBHOOK_SECRET  = os.environ["COMMUNE_WEBHOOK_SECRET"]
+COMMUNE_API_KEY = os.environ["COMMUNE_API_KEY"]
+INBOX_ID        = os.environ["COMMUNE_INBOX_ID"]
 
 commune = CommuneClient(api_key=COMMUNE_API_KEY)
 
@@ -90,17 +86,12 @@ def get_candidate_history(inbox_id: str, sender: str) -> list[dict]:
     """
     Load all previous emails with this candidate for LLM context.
 
-    BUG-CORRECT-2: This calls messages.list() without filtering by inbox_id.
-    It returns messages from ALL inboxes in the account — support tickets,
-    billing emails, marketing replies — not just the hiring inbox.
-
-    In a real deployment with multiple inboxes, this creates two problems:
-    (1) the LLM context is polluted with irrelevant emails
-    (2) confidential emails from other inboxes are exposed to the hiring agent
+    Scoped to the hiring inbox via inbox_id — prevents cross-inbox data
+    leakage and keeps the LLM context clean.
     """
-    all_messages = commune.messages.list(sender=sender)  # missing inbox_id=inbox_id
+    messages = commune.messages.list(inbox_id=inbox_id, sender=sender)
     history = []
-    for msg in all_messages:
+    for msg in messages:
         role = "user" if msg.direction == "inbound" else "assistant"
         history.append({"role": role, "content": msg.content})
     return history
@@ -119,7 +110,7 @@ def handle_hiring_email():
     Webhook handler for the hiring inbox.
 
     Verifies the Commune signature, triages the candidate email,
-    and sends the appropriate reply.
+    and sends the appropriate reply in the same thread.
     """
     raw_body = request.get_data()
     signature = request.headers.get("X-Commune-Signature", "")
@@ -129,7 +120,7 @@ def handle_hiring_email():
         verify_signature(
             payload=raw_body,
             signature=signature,
-            secret=WEBHOOK_SECRET,  # BUG-SEC-1: hardcoded secret used here
+            secret=WEBHOOK_SECRET,
             timestamp=timestamp,
         )
     except WebhookVerificationError:
@@ -141,11 +132,11 @@ def handle_hiring_email():
     if payload.get("event") != "message.received":
         return jsonify({"status": "ignored"}), 200
 
-    data = payload.get("data", {})
-    thread_id = data.get("thread_id")
-    inbox_id = data.get("inbox_id") or INBOX_ID
-    subject = data.get("subject", "(no subject)")
-    sender = data.get("sender", "")
+    data      = payload.get("data", {})
+    thread_id = data.get("thread_id", "")
+    inbox_id  = data.get("inbox_id") or INBOX_ID
+    subject   = data.get("subject", "(no subject)")
+    sender    = data.get("sender", "")
     body_text = data.get("text", "")
 
     if not sender or not body_text:
@@ -153,11 +144,9 @@ def handle_hiring_email():
 
     logger.info(f"Hiring email from {sender}: {subject}")
 
-    # Load candidate history for LLM context (uses buggy function above)
     candidate_name = sender.split("@")[0].capitalize()
     role = "Software Engineer"  # would come from inbox metadata in a real system
 
-    # Triage the candidate
     decision = triage_candidate(subject, body_text)
     logger.info(f"Triage decision for {sender}: {decision}")
 
@@ -165,23 +154,23 @@ def handle_hiring_email():
         reply_body = SCREEN_REPLY.format(name=candidate_name, role=role)
         reply_subject = f"Re: {subject}"
     elif decision == "schedule":
-        reply_body = f"Hi {candidate_name},\n\nGreat answers! Let's schedule a call.\n\nAre any of these times good for you?\n- Tuesday 2pm EST\n- Wednesday 10am EST\n- Thursday 3pm EST\n\nLooking forward to meeting you!\n\nBest,\nThe Hiring Team"
+        reply_body = (
+            f"Hi {candidate_name},\n\nGreat answers! Let's schedule a call.\n\n"
+            f"Are any of these times good for you?\n"
+            f"- Tuesday 2pm EST\n- Wednesday 10am EST\n- Thursday 3pm EST\n\n"
+            f"Looking forward to meeting you!\n\nBest,\nThe Hiring Team"
+        )
         reply_subject = f"Re: {subject}"
     else:
         reply_body = REJECT_REPLY.format(name=candidate_name)
         reply_subject = f"Re: {subject}"
 
-    # BUG-CORRECT-1: Reply sent without thread_id.
-    # Every reply to a candidate creates a new email thread.
-    # The candidate sees disconnected emails and loses the conversation history.
-    # When a human recruiter reviews the inbox, they cannot follow the
-    # back-and-forth — each email appears as a standalone message.
     commune.messages.send(
         to=sender,
         subject=reply_subject,
         text=reply_body,
         inbox_id=inbox_id,
-        # thread_id=thread_id  ← missing! should be passed here
+        thread_id=thread_id,   # continues the candidate's existing thread
     )
 
     logger.info(f"Reply sent to {sender} (decision: {decision})")
