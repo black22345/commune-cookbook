@@ -21,6 +21,9 @@ build/
 outreach_log.json
 sent_threads.json
 
+# Internal workspace files
+.tasks/
+
 # Editor
 .DS_Store
 .vscode/
