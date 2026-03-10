@@ -28,6 +28,7 @@ Open [`notebooks/01_quickstart.ipynb`](notebooks/01_quickstart.ipynb) in Colab. 
 
 | Framework | Start here |
 |-----------|-----------|
+| OpenClaw | [`openclaw-email-sms/`](openclaw-email-sms/) — `clawhub install shanjairaj7/commune` |
 | LangChain | [`langchain/customer-support/`](langchain/customer-support/) |
 | CrewAI | [`crewai/support-crew/`](crewai/support-crew/) |
 | OpenAI Agents SDK | [`openai-agents/support-agent/`](openai-agents/support-agent/) |
@@ -35,6 +36,7 @@ Open [`notebooks/01_quickstart.ipynb`](notebooks/01_quickstart.ipynb) in Colab. 
 | Claude tool_use | [`claude/support-agent/`](claude/support-agent/) |
 | TypeScript / Express | [`typescript/webhook-handler/`](typescript/webhook-handler/) |
 | MCP (Claude Desktop) | [`mcp-server/`](mcp-server/) |
+| Agent-to-agent (any framework) | [`agent-to-agent/`](agent-to-agent/) |
 
 **→ I want to build a specific thing**
 
@@ -46,6 +48,8 @@ Open [`notebooks/01_quickstart.ipynb`](notebooks/01_quickstart.ipynb) in Colab. 
 | Incident alerts | [`use-cases/notifications-and-alerts/`](use-cases/notifications-and-alerts/) |
 | SMS + email combined | [`notebooks/08_sms_email_combined.ipynb`](notebooks/08_sms_email_combined.ipynb) |
 | Multi-agent coordination | [`typescript/multi-agent/`](typescript/multi-agent/) |
+| Agent-to-agent communication | [`agent-to-agent/`](agent-to-agent/) |
+| OpenClaw personal agent | [`openclaw-email-sms/`](openclaw-email-sms/) |
 
 **→ I want to understand how things work**
 
