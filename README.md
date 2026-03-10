@@ -4,25 +4,25 @@
 [![LangChain](https://img.shields.io/badge/LangChain-compatible-green)](langchain/)
 [![CrewAI](https://img.shields.io/badge/CrewAI-compatible-orange)](crewai/)
 [![MCP](https://img.shields.io/badge/MCP-server-purple)](mcp-server/)
-[![CI](https://github.com/shanjai-raj/email-for-agents/actions/workflows/ci.yml/badge.svg)](https://github.com/shanjai-raj/email-for-agents/actions/workflows/ci.yml)
-
-## Interactive Notebooks
-
-Run these notebooks directly in your browser — no setup required:
-
-| Notebook | Framework | Open |
-|----------|-----------|------|
-| Customer Support Agent | LangChain | [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/shanjai-raj/commune-cookbook/blob/main/notebooks/langchain_customer_support.ipynb) |
-| Multi-Agent Email Crew | CrewAI | [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/shanjai-raj/commune-cookbook/blob/main/notebooks/crewai_multi_agent_crew.ipynb) |
-| Email Agent with OpenAI | OpenAI Agents SDK | [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/shanjai-raj/commune-cookbook/blob/main/notebooks/openai_agents_email.ipynb) |
-| Structured Email Extraction | Any framework | [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/shanjai-raj/commune-cookbook/blob/main/notebooks/structured_extraction.ipynb) |
-| 5-Minute Quickstart | Python | [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/shanjai-raj/commune-cookbook/blob/main/notebooks/quickstart.ipynb) |
-
----
+[![OpenClaw](https://img.shields.io/badge/OpenClaw-skills-orange)](openclaw-email-sms/)
 
 # Email & SMS for AI Agents
 
-**Give your AI agent a real email address and phone number. Production-ready examples for LangChain, CrewAI, OpenAI Agents SDK, Claude, and MCP. Powered by [Commune](https://commune.email).**
+**Give your AI agent a real email address and phone number. Production-ready examples for LangChain, CrewAI, OpenAI Agents SDK, Claude, MCP, OpenClaw, and agent-to-agent networks. Powered by [Commune](https://commune.email).**
+
+---
+
+## Agent Identity
+
+Email is the identity layer for agents. A human has `name@gmail.com` as their internet identity. An agent gets `agent-name@commune.email` — a permanent address that survives process restarts, framework changes, and infrastructure migrations.
+
+```python
+# One line — your agent has an identity on the internet
+inbox = commune.inboxes.create(local_part="my-agent")
+print(inbox.address)  # → my-agent@org.commune.email
+```
+
+This address is yours. It can receive email from any human or any other agent. It has a thread history that persists across sessions. It can be searched semantically. It can forward structured data to your webhook in real time. It is the single stable reference point for your agent in the world.
 
 ---
 
@@ -48,16 +48,75 @@ That's a real, deliverable inbox. Your agent can now send replies, search its th
 
 ---
 
+## OpenClaw
+
+> **OpenClaw users:** install the Commune email + SMS skills in 30 seconds. Your agent gets a real inbox and phone number it can use from WhatsApp, Telegram, or wherever it lives.
+
+```bash
+git clone https://github.com/shanjai-raj/commune-openclaw-email-sms-quickstart
+cd commune-openclaw-email-sms-quickstart
+bash install.sh
+```
+
+The installer copies two skills into `~/.openclaw/workspace/skills/`:
+- **`commune-email`** — send, receive, search, and manage email threads
+- **`commune-sms`** — send SMS, read conversations, manage phone numbers
+
+Once installed, your agent understands natural-language commands like "check my email", "reply to that thread about the contract", and "text Alex that I'm running late."
+
+[→ Full OpenClaw setup guide](openclaw-email-sms/) · [→ Dedicated repo with use cases](https://github.com/shanjai-raj/commune-openclaw-email-sms-quickstart)
+
+---
+
+## Agent-to-Agent Communication
+
+Agents communicate through Commune the same way humans do — by sending each other email. Every agent gets an address. Addresses are permanent. Threads preserve the full task chain.
+
+```python
+# Each agent is an email address
+orchestrator = commune.inboxes.create(local_part="orchestrator")
+researcher   = commune.inboxes.create(local_part="researcher")
+
+# Send a task
+task = commune.messages.send(
+    to=researcher.address,          # researcher@org.commune.email
+    subject="Research task",
+    text="Compare Postgres hosting pricing: Neon, Supabase, Railway.",
+    inbox_id=orchestrator.id,
+    idempotency_key="research-001", # safe to retry
+)
+
+# Researcher replies in the same thread — full context preserved
+commune.messages.send(
+    to=orchestrator.address,
+    subject="Re: Research task",
+    text=result,
+    inbox_id=researcher.id,
+    thread_id=task.thread_id,       # binds reply to task
+)
+
+# Orchestrator reads the full chain
+messages = commune.threads.messages(task.thread_id)
+# messages[0] = task, messages[1] = result, messages[n] = any follow-up
+```
+
+No shared database. No coordination layer. The thread IS the task context.
+
+[→ Full A2A examples with typed task delegation, semantic deduplication, and agent mesh patterns](agent-to-agent/)
+
+---
+
 ## Examples
 
-| Example | [LangChain](langchain/) | [CrewAI](crewai/) | [OpenAI Agents](openai-agents/) | [Claude](claude/) | [MCP](mcp-server/) | [TypeScript](typescript/) |
-|---------|:---------:|:------:|:-------------:|:------:|:---:|:----------:|
-| Customer Support Agent | [✅](langchain/) | [✅](crewai/) | [✅](openai-agents/) | [✅](claude/) | [✅](mcp-server/) | [✅](typescript/) |
-| Lead Outreach | [✅](langchain/) | [✅](crewai/) | — | [✅](claude/) | — | — |
-| Multi-Agent Coordination | — | [✅](crewai/) | — | — | — | [✅](typescript/) |
-| SMS Notifications | — | — | — | — | [✅](mcp-server/) | [✅](typescript/) |
-| Structured Extraction | — | — | — | [✅](claude/) | [✅](mcp-server/) | — |
-| Webhook Handler | — | — | — | — | — | [✅](typescript/) |
+| Example | [LangChain](langchain/) | [CrewAI](crewai/) | [OpenAI Agents](openai-agents/) | [Claude](claude/) | [MCP](mcp-server/) | [TypeScript](typescript/) | [A2A](agent-to-agent/) |
+|---------|:---------:|:------:|:-------------:|:------:|:---:|:----------:|:---:|
+| Customer Support Agent | [✅](langchain/) | [✅](crewai/) | [✅](openai-agents/) | [✅](claude/) | [✅](mcp-server/) | [✅](typescript/) | — |
+| Lead Outreach | [✅](langchain/) | [✅](crewai/) | — | [✅](claude/) | — | — | — |
+| Multi-Agent Coordination | — | [✅](crewai/) | — | — | — | [✅](typescript/) | [✅](agent-to-agent/) |
+| SMS Notifications | — | — | — | — | [✅](mcp-server/) | [✅](typescript/) | — |
+| Structured Extraction | — | — | — | [✅](claude/) | [✅](mcp-server/) | — | — |
+| Webhook Handler | — | — | — | — | — | [✅](typescript/) | — |
+| Task Delegation | — | — | — | — | — | — | [✅](agent-to-agent/) |
 
 ---
 
@@ -69,6 +128,7 @@ Most agent frameworks are great at reasoning — but stop short when it comes to
 - **Email is the universal protocol.** Every system on the planet speaks SMTP. Your agent can talk to any user, any tool, any service — no integration required.
 - **Threading keeps context.** `In-Reply-To` and `References` headers (RFC 5322) tie every message to its thread. Your agent never loses the conversation history.
 - **SMS adds the urgency channel.** Some things need immediate attention. Two-way SMS lets your agent escalate, notify, and confirm — all from a real phone number.
+- **Agent-to-agent is next.** Agents will increasingly communicate with other agents — delegating tasks, routing results, building mesh networks. Email is the right protocol: async, persistent, addressable, universally supported.
 
 ### What Commune adds on top of bare SMTP
 
@@ -78,6 +138,7 @@ Most agent frameworks are great at reasoning — but stop short when it comes to
 | **Structured JSON extraction** | Define a JSON schema per inbox; every inbound email is parsed into structured data automatically |
 | **Idempotent sends** | Pass an `idempotency_key` and your agent gets a `202` immediately — Commune deduplicates sends within a 24-hour window, so retries never produce duplicate messages |
 | **Guaranteed webhook delivery** | 8 retries with exponential backoff and a circuit breaker — your agent's handler will receive every event even through transient failures |
+| **Per-inbox task schemas** | Configure what a "task email" looks like — Commune extracts typed fields before your webhook fires |
 
 ---
 
@@ -85,8 +146,10 @@ Most agent frameworks are great at reasoning — but stop short when it comes to
 
 ```mermaid
 flowchart LR
-    subgraph Agent["Your AI Agent"]
-        A[LangChain / CrewAI\nOpenAI / Claude / MCP]
+    subgraph Agents["AI Agents"]
+        A1["Agent A\norchestrator@org.commune.email"]
+        A2["Agent B\nresearcher@org.commune.email"]
+        A3["LangChain / CrewAI\nOpenAI / Claude / MCP"]
     end
     subgraph Commune["Commune Platform"]
         B[Inbox] --> C[Email Threading]
@@ -94,9 +157,10 @@ flowchart LR
         C --> E[JSON Extraction]
         C --> F[Webhook Delivery]
     end
-    User["User / External\nEmail Client"] <-->|"email"| Commune
-    Agent <-->|"Commune SDK\ncommune-ai / commune-mail"| Commune
-    F -->|"webhook\n(HMAC signed)"| Agent
+    Human["User / External\nEmail Client"] <-->|"email"| Commune
+    A1 <-->|"task delegation"| A2
+    Agents <-->|"Commune SDK\ncommune-ai / commune-mail"| Commune
+    F -->|"webhook\n(HMAC signed)"| Agents
 ```
 
 ---
@@ -119,11 +183,40 @@ Sign up at [commune.email](https://commune.email) — free tier included, no cre
 
 **3. Pick an example below and follow its README**
 
-Every example is self-contained: install, set your key, run. No boilerplate beyond what you see.
+Every example is self-contained: install, set your key, run.
 
 ---
 
 ## Platform examples
+
+### OpenClaw
+
+OpenClaw is the most popular open-source personal agent framework. Commune provides first-party skills for email and SMS — install once, and your OpenClaw agent can manage a real inbox from any chat interface.
+
+| Example | Description |
+|---------|-------------|
+| [Personal Assistant](openclaw-email-sms/use-cases/personal-assistant/) | Agent manages your personal email — check, reply, summarize from WhatsApp |
+| [Company Agent](openclaw-email-sms/use-cases/company-assistant/) | Agent handles customer email: triage, draft replies, SMS escalation |
+| [Skill: commune-email](openclaw-email-sms/skills/) | Full email skill: create inboxes, read threads, send, reply, search |
+| [Skill: commune-sms](openclaw-email-sms/skills/) | SMS skill: send, receive, list phone numbers |
+
+[→ See all OpenClaw examples](openclaw-email-sms/) · [→ Dedicated quickstart repo](https://github.com/shanjai-raj/commune-openclaw-email-sms-quickstart)
+
+---
+
+### Agent-to-Agent
+
+Each agent gets its own inbox address. Agents delegate tasks by sending emails, receive results as replies, and maintain full thread history without shared state.
+
+| Example | Description |
+|---------|-------------|
+| [Orchestrator → Worker](agent-to-agent/) | Orchestrator sends typed task, worker processes and replies in thread |
+| [Typed task delegation](agent-to-agent/) | Extraction schema on worker inbox — tasks auto-parsed before webhook fires |
+| [Agent mesh](agent-to-agent/) | N agents each with own inbox, delegating tasks across the network |
+
+[→ See all A2A examples](agent-to-agent/)
+
+---
 
 ### LangChain
 
@@ -221,6 +314,7 @@ Browse examples by what you want to build:
 | [Omnichannel Support](use-cases/customer-support/omnichannel-support/) | Email + SMS | Advanced |
 | [Incident Alert System](use-cases/notifications-and-alerts/incident-alerts/) | Email + SMS | Advanced |
 | [Multi-Agent Coordination](typescript/multi-agent/) | Email | Advanced |
+| [Agent-to-Agent Task Delegation](agent-to-agent/) | Email | Advanced |
 
 → [Browse all use cases](use-cases/)
 
@@ -292,7 +386,7 @@ commune.messages.send(
 <details>
 <summary><strong>Structured extraction</strong></summary>
 
-Define a JSON schema on an inbox and every inbound email will be parsed against it automatically — before your agent ever sees the message. Useful for order confirmations, form submissions, support tickets, or any email with a predictable structure.
+Define a JSON schema on an inbox and every inbound email will be parsed against it automatically — before your agent ever sees the message. Useful for order confirmations, form submissions, support tickets, typed task delegation between agents, or any email with a predictable structure.
 
 ```python
 commune.inboxes.update(inbox.id, extraction_schema={
@@ -399,6 +493,20 @@ app.post('/webhook', express.raw({ type: 'application/json' }), (req, res) => {
 | `commune.threads.setStatus(threadId, status)` | Update thread status |
 | `commune.sms.send({ to, body, phoneNumberId })` | Send an SMS |
 | `commune.phoneNumbers.provision()` | Provision a real phone number |
+
+---
+
+## Interactive Notebooks
+
+Run these notebooks directly in your browser — no setup required:
+
+| Notebook | Framework | Open |
+|----------|-----------|------|
+| Customer Support Agent | LangChain | [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/shanjai-raj/commune-cookbook/blob/main/notebooks/langchain_customer_support.ipynb) |
+| Multi-Agent Email Crew | CrewAI | [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/shanjai-raj/commune-cookbook/blob/main/notebooks/crewai_multi_agent_crew.ipynb) |
+| Email Agent with OpenAI | OpenAI Agents SDK | [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/shanjai-raj/commune-cookbook/blob/main/notebooks/openai_agents_email.ipynb) |
+| Structured Email Extraction | Any framework | [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/shanjai-raj/commune-cookbook/blob/main/notebooks/structured_extraction.ipynb) |
+| 5-Minute Quickstart | Python | [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/shanjai-raj/commune-cookbook/blob/main/notebooks/quickstart.ipynb) |
 
 ---
 
